@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:odoo_mobile_app/core/data/order_detail.dart';
+import 'package:odoo_mobile_app/core/data/purchase_detail.dart';
 import 'package:odoo_mobile_app/core/data/purchase_summary.dart';
 import 'package:odoo_mobile_app/core/data/quotation_data.dart';
 import 'package:odoo_mobile_app/core/data/user_session.dart';
@@ -24,6 +25,7 @@ class OdooService {
   // Purchase v3
   static const String purchaseOrders = '/api/v3/purchase/orders';
   static const String purchaseOrderCreate = '/api/v3/purchase/order/create';
+  static const String purchaseOrderDetails = '/api/v3/purchase/order/details';
 
   // Warehouse v3
   static const String warehousePickings = '/api/v3/warehouse/pickings';
@@ -90,10 +92,7 @@ class OdooService {
     final response = await http
         .post(
           Uri.parse("$baseUrl$path"),
-          headers: {
-            "Content-Type": "application/json",
-            if (sessionId != null) "Cookie": sessionId,
-          },
+          headers: {"Content-Type": "application/json", if (sessionId != null) "Cookie": sessionId},
           body: jsonEncode({"jsonrpc": "2.0", "method": "call", "params": params}),
         )
         .timeout(const Duration(seconds: 20));
@@ -143,7 +142,9 @@ class OdooService {
 
     String? rawCookie = response.headers['set-cookie'];
     if (rawCookie != null) {
-      final sessionToken = rawCookie.split(';').firstWhere(
+      final sessionToken = rawCookie
+          .split(';')
+          .firstWhere(
             (element) => element.trim().startsWith('session_id='),
             orElse: () => rawCookie.split(';').first,
           );
@@ -158,9 +159,7 @@ class OdooService {
 
   // ==================== 2. DELTA MASTER DATA SYNC ====================
   Future<Map<String, dynamic>> fetchMasterDataDelta({String? lastSync}) async {
-    final result = await postRPC(syncMasterData, {
-      if (lastSync != null) "last_sync": lastSync,
-    });
+    final result = await postRPC(syncMasterData, {if (lastSync != null) "last_sync": lastSync});
 
     if (result == null || result['status'] != 'success') {
       throw Exception(result?['message'] ?? "Failed to sync master data.");
@@ -207,6 +206,14 @@ class OdooService {
     return rawList
         .map((e) => PurchaseSummary.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
+  }
+
+  Future<PurchaseDetail> getPurchaseOrderDetails(int poId) async {
+    final result = await postRPC(purchaseOrderDetails, {"po_id": poId});
+    if (result == null || result['status'] != 'success') {
+      throw Exception(result?['message'] ?? "Failed to load purchase order details.");
+    }
+    return PurchaseDetail.fromJson(Map<String, dynamic>.from(result as Map));
   }
 
   // ==================== 5. WAREHOUSE API ====================

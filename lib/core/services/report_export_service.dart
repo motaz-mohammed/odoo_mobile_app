@@ -3,6 +3,7 @@ import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 import 'package:odoo_mobile_app/core/data/order_detail.dart';
 import 'package:odoo_mobile_app/core/data/order_summary.dart';
+import 'package:odoo_mobile_app/core/data/purchase_detail.dart';
 import 'package:odoo_mobile_app/core/data/purchase_summary.dart';
 import 'package:odoo_mobile_app/core/data/warehouse_picking.dart';
 import 'package:path_provider/path_provider.dart';
@@ -27,10 +28,18 @@ class ReportExportService {
             child: pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text('Odoo Mobile Manager - Order Report',
-                    style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                pw.Text(order.name,
-                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo)),
+                pw.Text(
+                  'Odoo Mobile Manager - Order Report',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Text(
+                  order.name,
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.indigo,
+                  ),
+                ),
               ],
             ),
           ),
@@ -42,13 +51,17 @@ class ReportExportService {
             headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
             headerDecoration: const pw.BoxDecoration(color: PdfColors.indigo),
             headers: ['#', 'Product', 'Qty', 'Unit Price', 'Subtotal'],
-            data: order.lines.map((l) => [
-              '${l.rankId}',
-              l.product,
-              _numFmt.format(l.quantity),
-              _numFmt.format(l.price),
-              _numFmt.format(l.subtotal),
-            ]).toList(),
+            data: order.lines
+                .map(
+                  (l) => [
+                    '${l.rankId}',
+                    l.product,
+                    _numFmt.format(l.quantity),
+                    _numFmt.format(l.price),
+                    _numFmt.format(l.subtotal),
+                  ],
+                )
+                .toList(),
           ),
           pw.SizedBox(height: 16),
           pw.Align(
@@ -119,6 +132,68 @@ class ReportExportService {
     await _saveAndShareExcel(excel, 'purchase_orders_report.xlsx');
   }
 
+  static Future<void> printPurchaseOrderPdf(PurchaseDetail po) async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) => [
+          pw.Header(
+            level: 0,
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text(
+                  'Purchase Order Report',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Text(
+                  po.poName,
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.deepPurple,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          pw.Text('Vendor: ${po.vendorName}'),
+          pw.Text('Date: ${po.orderDate}'),
+          pw.Text('Status: ${po.orderState.toUpperCase()}'),
+          pw.SizedBox(height: 16),
+          pw.TableHelper.fromTextArray(
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.deepPurple),
+            headers: ['#', 'Product', 'Qty', 'Received', 'Unit Price', 'Subtotal'],
+            data: po.lines
+                .map(
+                  (l) => [
+                    '${l.rankId}',
+                    l.product,
+                    _numFmt.format(l.quantity),
+                    _numFmt.format(l.qtyReceived),
+                    _numFmt.format(l.priceUnit),
+                    _numFmt.format(l.subtotal),
+                  ],
+                )
+                .toList(),
+          ),
+          pw.SizedBox(height: 16),
+          pw.Align(
+            alignment: pw.Alignment.centerRight,
+            child: pw.Text(
+              'Grand Total: ${_numFmt.format(po.amountTotal)}',
+              style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (_) async => pdf.save(), name: '${po.poName}.pdf');
+  }
+
   // ==================== 4. PDF & EXCEL: WAREHOUSE PICKING ====================
   static Future<void> printPickingPdf(PickingDetail picking) async {
     final pdf = pw.Document();
@@ -129,8 +204,10 @@ class ReportExportService {
         build: (context) => [
           pw.Header(
             level: 0,
-            child: pw.Text('Warehouse Transfer Slip: ${picking.name}',
-                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            child: pw.Text(
+              'Warehouse Transfer Slip: ${picking.name}',
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
           ),
           pw.Text('Partner: ${picking.partnerName}'),
           pw.Text('Source Document: ${picking.origin}'),
@@ -140,13 +217,17 @@ class ReportExportService {
             headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
             headerDecoration: const pw.BoxDecoration(color: PdfColors.teal),
             headers: ['Product', 'Barcode', 'Demand', 'Done', 'UoM'],
-            data: picking.moves.map((m) => [
-              m.productName,
-              m.barcode,
-              _numFmt.format(m.demandQty),
-              _numFmt.format(m.doneQty),
-              m.uom,
-            ]).toList(),
+            data: picking.moves
+                .map(
+                  (m) => [
+                    m.productName,
+                    m.barcode,
+                    _numFmt.format(m.demandQty),
+                    _numFmt.format(m.doneQty),
+                    m.uom,
+                  ],
+                )
+                .toList(),
           ),
         ],
       ),

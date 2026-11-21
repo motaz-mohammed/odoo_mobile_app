@@ -5,6 +5,7 @@ import 'package:odoo_mobile_app/core/data/lookup_customer.dart';
 import 'package:odoo_mobile_app/core/data/lookup_product.dart';
 import 'package:odoo_mobile_app/core/data/lookup_vendor.dart';
 import 'package:odoo_mobile_app/core/data/order_detail.dart';
+import 'package:odoo_mobile_app/core/data/purchase_detail.dart';
 import 'package:odoo_mobile_app/core/data/purchase_summary.dart';
 import 'package:odoo_mobile_app/core/data/quotation_data.dart';
 import 'package:odoo_mobile_app/core/data/quotation_response.dart';
@@ -230,6 +231,14 @@ class OdooRepository {
         reason: "Device offline, PO saved in SQLite",
       );
     }
+  }
+
+  Future<PurchaseDetail> fetchPurchaseOrderDetail(int poId) async {
+    return await _odooService.getPurchaseOrderDetails(poId);
+  }
+
+  Future<Map<String, dynamic>> confirmPurchaseOrder(int poId) async {
+    return await _odooService.postRPC('/api/v3/purchase/order/confirm', {'po_id': poId});
   }
 
   // ==================== WAREHOUSE RECEIPTS & DELIVERIES ====================

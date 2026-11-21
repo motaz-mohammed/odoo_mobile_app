@@ -11,6 +11,7 @@ class Routes {
   // Purchase
   static const String purchaseOrdersScreen = '/purchaseOrdersScreen';
   static const String purchaseOrderNewScreen = '/purchaseOrderNewScreen';
+  static const String purchaseOrderDetailsScreen = '/purchaseOrderDetailsScreen';
 
   // Warehouse
   static const String warehousePickingsScreen = '/warehousePickingsScreen';

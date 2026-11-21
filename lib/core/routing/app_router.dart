@@ -7,6 +7,7 @@ import 'package:odoo_mobile_app/features/home/ui/home_screen.dart';
 import 'package:odoo_mobile_app/features/login/logic/cubits/login_cubit.dart';
 import 'package:odoo_mobile_app/features/login/ui/login_screen.dart';
 import 'package:odoo_mobile_app/features/offline_sync_center_screen/ui/offline_sync_center_screen.dart';
+import 'package:odoo_mobile_app/features/purchase/ui/purchase_order_details_screen.dart';
 import 'package:odoo_mobile_app/features/purchase/ui/purchase_order_new_screen.dart';
 import 'package:odoo_mobile_app/features/purchase/ui/purchase_orders_screen.dart';
 import 'package:odoo_mobile_app/features/sales_quotation_details_screen/logic/sales_quotation_details_cubit.dart';
@@ -102,6 +103,15 @@ class AppRouter {
           builder: (_) => RepositoryProvider.value(
             value: _odooRepository,
             child: const PurchaseOrderNewScreen(),
+          ),
+        );
+
+      case Routes.purchaseOrderDetailsScreen:
+        final poId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => RepositoryProvider.value(
+            value: _odooRepository,
+            child: PurchaseOrderDetailsScreen(poId: poId),
           ),
         );
 

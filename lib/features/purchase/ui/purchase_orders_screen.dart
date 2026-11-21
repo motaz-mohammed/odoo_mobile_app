@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:odoo_mobile_app/core/data/purchase_summary.dart';
 import 'package:odoo_mobile_app/core/repository/odoo_repository.dart';
+import 'package:odoo_mobile_app/core/routing/routes.dart';
 import 'package:odoo_mobile_app/core/services/report_export_service.dart';
 import 'package:odoo_mobile_app/core/widgets/shimmer_skeleton.dart';
 
@@ -31,14 +32,16 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => setState(() => _future = context.read<OdooRepository>().fetchPurchaseOrders()),
+            onPressed: () =>
+                setState(() => _future = context.read<OdooRepository>().fetchPurchaseOrders()),
           ),
         ],
       ),
       body: FutureBuilder<List<PurchaseSummary>>(
         future: _future,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const ShimmerCardSkeleton();
+          if (snapshot.connectionState == ConnectionState.waiting)
+            return const ShimmerCardSkeleton();
           if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
           final list = snapshot.data ?? [];
           if (list.isEmpty) return const Center(child: Text("No purchase orders found."));
@@ -66,7 +69,16 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                         subtitle: Text("${po.vendorName}\n${po.dateOrder}"),
                         trailing: Text(
                           po.amountTotal.toStringAsFixed(2),
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          Routes.purchaseOrderDetailsScreen,
+                          arguments: po.id,
                         ),
                       ),
                     );
