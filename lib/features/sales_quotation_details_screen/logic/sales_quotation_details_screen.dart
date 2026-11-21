@@ -21,10 +21,20 @@ class SalesQuotationDetails extends StatelessWidget {
           BlocBuilder<SalesQuotationDetailsCubit, SalesQuotationDetailsState>(
             builder: (context, state) {
               if (state is SalesQuotationDetailsLoaded) {
-                return IconButton(
-                  tooltip: "Export PDF Report",
-                  icon: const Icon(Icons.picture_as_pdf),
-                  onPressed: () => ReportExportService.printOrShareOrderPdf(state.order),
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: "Print Order PDF",
+                      icon: const Icon(Icons.print),
+                      onPressed: () => ReportExportService.printOrShareOrderPdf(state.order),
+                    ),
+                    IconButton(
+                      tooltip: "Share Order PDF to Apps",
+                      icon: const Icon(Icons.share),
+                      onPressed: () => ReportExportService.shareOrderPdfToApps(state.order),
+                    ),
+                  ],
                 );
               }
               return const SizedBox.shrink();
@@ -42,7 +52,10 @@ class SalesQuotationDetails extends StatelessWidget {
               children: [
                 SoftShadowCard(
                   child: ListTile(
-                    title: Text(order.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    title: Text(
+                      order.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
                     subtitle: Text("${order.date} • Items: ${order.lines.length}"),
                     trailing: Chip(label: Text(order.state.toUpperCase())),
                   ),
@@ -56,11 +69,17 @@ class SalesQuotationDetails extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         child: ListTile(
                           leading: _productThumb(line.imageBase64),
-                          title: Text(line.product, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          title: Text(
+                            line.product,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           subtitle: Text("Qty: ${line.quantity} x ${line.price}"),
                           trailing: Text(
                             line.subtotal.toStringAsFixed(2),
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.indigo,
+                            ),
                           ),
                         ),
                       );
@@ -77,7 +96,8 @@ class SalesQuotationDetails extends StatelessWidget {
   }
 
   Widget _productThumb(String? b64) {
-    if (b64 == null || b64.isEmpty) return const Icon(Icons.inventory_2, size: 36, color: Colors.grey);
+    if (b64 == null || b64.isEmpty)
+      return const Icon(Icons.inventory_2, size: 36, color: Colors.grey);
     try {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),

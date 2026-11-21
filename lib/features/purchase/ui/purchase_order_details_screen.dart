@@ -78,12 +78,18 @@ class _PurchaseOrderDetailsScreenState extends State<PurchaseOrderDetailsScreen>
             backgroundColor: Colors.deepPurple,
             foregroundColor: Colors.white,
             actions: [
-              if (po != null)
+              if (po != null) ...[
                 IconButton(
-                  tooltip: "Print / Share PDF",
-                  icon: const Icon(Icons.picture_as_pdf),
+                  tooltip: "Print PO PDF",
+                  icon: const Icon(Icons.print),
                   onPressed: () => ReportExportService.printPurchaseOrderPdf(po),
                 ),
+                IconButton(
+                  tooltip: "Share PO PDF to Apps",
+                  icon: const Icon(Icons.share),
+                  onPressed: () => ReportExportService.sharePurchaseOrderPdfToApps(po),
+                ),
+              ],
             ],
           ),
           body: Builder(

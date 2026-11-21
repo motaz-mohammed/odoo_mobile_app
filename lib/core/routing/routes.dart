@@ -20,4 +20,13 @@ class Routes {
   // Sync & Scanner
   static const String offlineSyncCenter = '/offlineSyncCenter';
   static const String barcodeScannerScreen = '/barcodeScannerScreen';
+
+  // About Developer
+  static const String aboutDeveloperScreen = '/aboutDeveloperScreen';
+
+  //Customer Invoices
+  static const String customerInvoicesScreen = '/customerInvoicesScreen';
+
+  //Customer Invoices
+  static const String customerInvoiceDetailsScreen = '/customerInvoiceDetailsScreen';
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
+import 'package:odoo_mobile_app/core/data/customer_invoice_detail.dart';
 import 'package:odoo_mobile_app/core/data/order_detail.dart';
 import 'package:odoo_mobile_app/core/data/order_summary.dart';
 import 'package:odoo_mobile_app/core/data/purchase_detail.dart';
@@ -16,7 +17,7 @@ class ReportExportService {
   static final _numFmt = NumberFormat('#,##0.00', 'en_US');
 
   // ==================== 1. PDF: SINGLE ORDER / QUOTATION ====================
-  static Future<void> printOrShareOrderPdf(OrderDetail order) async {
+  static pw.Document _buildOrderPdf(OrderDetail order) {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -74,8 +75,17 @@ class ReportExportService {
         ],
       ),
     );
+    return pdf;
+  }
 
+  static Future<void> printOrShareOrderPdf(OrderDetail order) async {
+    final pdf = _buildOrderPdf(order);
     await Printing.layoutPdf(onLayout: (_) async => pdf.save(), name: '${order.name}.pdf');
+  }
+
+  static Future<void> shareOrderPdfToApps(OrderDetail order) async {
+    final pdf = _buildOrderPdf(order);
+    await _saveAndSharePdf(pdf, '${order.name}.pdf', 'Sales Order ${order.name}');
   }
 
   // ==================== 2. EXCEL: SALES QUOTATIONS SUMMARY ====================
@@ -105,7 +115,7 @@ class ReportExportService {
     await _saveAndShareExcel(excel, 'sales_orders_report.xlsx');
   }
 
-  // ==================== 3. EXCEL: PURCHASE ORDERS SUMMARY ====================
+  // ==================== 3. EXCEL & PDF: PURCHASE ORDERS ====================
   static Future<void> exportPurchasesExcel(List<PurchaseSummary> orders) async {
     final excel = Excel.createExcel();
     final sheet = excel['Purchase Orders'];
@@ -132,7 +142,7 @@ class ReportExportService {
     await _saveAndShareExcel(excel, 'purchase_orders_report.xlsx');
   }
 
-  static Future<void> printPurchaseOrderPdf(PurchaseDetail po) async {
+  static pw.Document _buildPurchaseOrderPdf(PurchaseDetail po) {
     final pdf = pw.Document();
     pdf.addPage(
       pw.MultiPage(
@@ -190,12 +200,21 @@ class ReportExportService {
         ],
       ),
     );
+    return pdf;
+  }
 
+  static Future<void> printPurchaseOrderPdf(PurchaseDetail po) async {
+    final pdf = _buildPurchaseOrderPdf(po);
     await Printing.layoutPdf(onLayout: (_) async => pdf.save(), name: '${po.poName}.pdf');
   }
 
-  // ==================== 4. PDF & EXCEL: WAREHOUSE PICKING ====================
-  static Future<void> printPickingPdf(PickingDetail picking) async {
+  static Future<void> sharePurchaseOrderPdfToApps(PurchaseDetail po) async {
+    final pdf = _buildPurchaseOrderPdf(po);
+    await _saveAndSharePdf(pdf, '${po.poName}.pdf', 'Purchase Order ${po.poName}');
+  }
+
+  // ==================== 4. PDF: WAREHOUSE PICKING ====================
+  static pw.Document _buildPickingPdf(PickingDetail picking) {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -232,8 +251,118 @@ class ReportExportService {
         ],
       ),
     );
+    return pdf;
+  }
 
+  static Future<void> printPickingPdf(PickingDetail picking) async {
+    final pdf = _buildPickingPdf(picking);
     await Printing.layoutPdf(onLayout: (_) async => pdf.save(), name: '${picking.name}.pdf');
+  }
+
+  static Future<void> sharePickingPdfToApps(PickingDetail picking) async {
+    final pdf = _buildPickingPdf(picking);
+    await _saveAndSharePdf(pdf, '${picking.name}.pdf', 'Warehouse Slip ${picking.name}');
+  }
+
+  // ==================== 5. PDF: CUSTOMER INVOICE ====================
+  static pw.Document _buildCustomerInvoicePdf(CustomerInvoiceDetail inv) {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) => [
+          pw.Header(
+            level: 0,
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text(
+                  'Customer Invoice',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Text(
+                  inv.invoiceName,
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.amber800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          pw.Text('Customer: ${inv.customerName}'),
+          pw.Text('Invoice Date: ${inv.invoiceDate}   |   Due Date: ${inv.dueDate}'),
+          if (inv.invoiceOrigin.isNotEmpty) pw.Text('Source Document: ${inv.invoiceOrigin}'),
+          pw.Text('Payment Status: ${inv.paymentState.toUpperCase()}'),
+          pw.SizedBox(height: 16),
+          pw.TableHelper.fromTextArray(
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.amber800),
+            headers: ['#', 'Product', 'Qty', 'Unit Price', 'Subtotal'],
+            data: inv.lines
+                .map(
+                  (l) => [
+                    '${l.rankId}',
+                    l.product,
+                    '${_numFmt.format(l.quantity)} ${l.uom}',
+                    _numFmt.format(l.priceUnit),
+                    _numFmt.format(l.subtotal),
+                  ],
+                )
+                .toList(),
+          ),
+          pw.SizedBox(height: 16),
+          pw.Align(
+            alignment: pw.Alignment.centerRight,
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
+              children: [
+                pw.Text('Untaxed: ${_numFmt.format(inv.amountUntaxed)}'),
+                pw.Text('Tax: ${_numFmt.format(inv.amountTax)}'),
+                pw.Text(
+                  'Grand Total: ${_numFmt.format(inv.amountTotal)}',
+                  style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Text(
+                  'Amount Due: ${_numFmt.format(inv.amountResidual)}',
+                  style: pw.TextStyle(
+                    fontSize: 14,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.red800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    return pdf;
+  }
+
+  static Future<void> printCustomerInvoicePdf(CustomerInvoiceDetail inv) async {
+    final pdf = _buildCustomerInvoicePdf(inv);
+    await Printing.layoutPdf(onLayout: (_) async => pdf.save(), name: '${inv.invoiceName}.pdf');
+  }
+
+  static Future<void> shareCustomerInvoicePdfToApps(CustomerInvoiceDetail inv) async {
+    final pdf = _buildCustomerInvoicePdf(inv);
+    await _saveAndSharePdf(pdf, '${inv.invoiceName}.pdf', 'Customer Invoice ${inv.invoiceName}');
+  }
+
+  // ==================== SHARED FILE HELPERS ====================
+  static Future<void> _saveAndSharePdf(
+    pw.Document pdf,
+    String rawFileName,
+    String shareText,
+  ) async {
+    final bytes = await pdf.save();
+    final safeName = rawFileName.replaceAll(RegExp(r'[/\\:*?"<>|]'), '_');
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/$safeName');
+    await file.writeAsBytes(bytes, flush: true);
+    await Share.shareXFiles([XFile(file.path, mimeType: 'application/pdf')], text: shareText);
   }
 
   static Future<void> _saveAndShareExcel(Excel excel, String fileName) async {

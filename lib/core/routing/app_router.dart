@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:odoo_mobile_app/core/networking/odoo_service.dart';
 import 'package:odoo_mobile_app/core/repository/odoo_repository.dart';
 import 'package:odoo_mobile_app/core/routing/routes.dart';
+import 'package:odoo_mobile_app/features/about/ui/about_developer_screen.dart';
+import 'package:odoo_mobile_app/features/accounting/ui/customer_invoice_details_screen.dart';
+import 'package:odoo_mobile_app/features/accounting/ui/customer_invoices_screen.dart';
 import 'package:odoo_mobile_app/features/home/ui/home_screen.dart';
 import 'package:odoo_mobile_app/features/login/logic/cubits/login_cubit.dart';
 import 'package:odoo_mobile_app/features/login/ui/login_screen.dart';
@@ -140,8 +143,28 @@ class AppRouter {
           ),
         );
 
+      case Routes.aboutDeveloperScreen:
+        return MaterialPageRoute(builder: (_) => const AboutDeveloperScreen());
+
       case Routes.barcodeScannerScreen:
         return MaterialPageRoute<String>(builder: (_) => const BarcodeScannerScreen());
+
+      case Routes.customerInvoicesScreen:
+        return MaterialPageRoute(
+          builder: (_) => RepositoryProvider.value(
+            value: _odooRepository,
+            child: const CustomerInvoicesScreen(),
+          ),
+        );
+
+      case Routes.customerInvoiceDetailsScreen:
+        final invoiceId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => RepositoryProvider.value(
+            value: _odooRepository,
+            child: CustomerInvoiceDetailsScreen(invoiceId: invoiceId),
+          ),
+        );
 
       default:
         return null;

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:odoo_mobile_app/core/data/customer_invoice.dart';
+import 'package:odoo_mobile_app/core/data/customer_invoice_detail.dart';
 import 'package:odoo_mobile_app/core/data/lookup_customer.dart';
 import 'package:odoo_mobile_app/core/data/lookup_product.dart';
 import 'package:odoo_mobile_app/core/data/lookup_vendor.dart';
@@ -338,5 +340,17 @@ class OdooRepository {
       }
     }
     return syncedCount;
+  }
+
+  Future<List<CustomerInvoice>> fetchCustomerInvoices({String? paymentState}) async {
+    return await _odooService.getCustomerInvoices(paymentState: paymentState);
+  }
+
+  Future<Map<String, dynamic>> registerInvoicePayment(int invoiceId, double amount) async {
+    return await _odooService.payCustomerInvoice(invoiceId, amount);
+  }
+
+  Future<CustomerInvoiceDetail> fetchCustomerInvoiceDetail(int invoiceId) async {
+    return await _odooService.getCustomerInvoiceDetails(invoiceId);
   }
 }

@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:odoo_mobile_app/core/data/customer_invoice.dart';
+import 'package:odoo_mobile_app/core/data/customer_invoice_detail.dart';
 import 'package:odoo_mobile_app/core/data/order_detail.dart';
 import 'package:odoo_mobile_app/core/data/purchase_detail.dart';
 import 'package:odoo_mobile_app/core/data/purchase_summary.dart';
@@ -34,6 +36,10 @@ class OdooService {
 
   static const String _lastSyncKey = 'odoo_last_master_sync';
   static const String _userProfileKey = 'odoo_user_profile_json';
+
+  static const String customerInvoices = '/api/v3/account/invoices';
+  static const String registerInvoicePayment = '/api/v3/account/invoice/pay';
+  static const String customerInvoiceDetails = '/api/v3/account/invoice/details';
 
   Future<String?> _getSavedSessionId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -260,5 +266,35 @@ class OdooService {
       throw Exception(result?['message'] ?? "Failed to validate transfer.");
     }
     return Map<String, dynamic>.from(result as Map);
+  }
+
+  Future<List<CustomerInvoice>> getCustomerInvoices({String? paymentState}) async {
+    final result = await postRPC(customerInvoices, {
+      if (paymentState != null) 'payment_state': paymentState,
+    });
+    if (result == null || result['status'] != 'success') {
+      throw Exception(result?['message'] ?? "Failed to load invoices.");
+    }
+    final raw = result['data'] as List? ?? [];
+    return raw.map((e) => CustomerInvoice.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+  }
+
+  Future<Map<String, dynamic>> payCustomerInvoice(int invoiceId, double amount) async {
+    final result = await postRPC(registerInvoicePayment, {
+      'invoice_id': invoiceId,
+      'amount': amount,
+    });
+    if (result == null || result['status'] != 'success') {
+      throw Exception(result?['message'] ?? "Payment registration failed.");
+    }
+    return Map<String, dynamic>.from(result as Map);
+  }
+
+  Future<CustomerInvoiceDetail> getCustomerInvoiceDetails(int invoiceId) async {
+    final result = await postRPC(customerInvoiceDetails, {'invoice_id': invoiceId});
+    if (result == null || result['status'] != 'success') {
+      throw Exception(result?['message'] ?? "Failed to load invoice details.");
+    }
+    return CustomerInvoiceDetail.fromJson(Map<String, dynamic>.from(result as Map));
   }
 }
