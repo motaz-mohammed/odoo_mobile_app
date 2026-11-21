@@ -174,6 +174,17 @@ class _CustomerInvoicesScreenState extends State<CustomerInvoicesScreen> {
           ),
         ],
       ),
+
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Colors.amber.shade800,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text("New Invoice"),
+        onPressed: () async {
+          final created = await Navigator.pushNamed(context, Routes.customerInvoiceNewScreen);
+          if (created == true && mounted) setState(_reload);
+        },
+      ),
     );
   }
 

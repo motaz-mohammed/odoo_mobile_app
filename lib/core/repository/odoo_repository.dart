@@ -353,4 +353,16 @@ class OdooRepository {
   Future<CustomerInvoiceDetail> fetchCustomerInvoiceDetail(int invoiceId) async {
     return await _odooService.getCustomerInvoiceDetails(invoiceId);
   }
+
+  Future<Map<String, dynamic>> createCustomerInvoice({
+    required int partnerId,
+    required List<Map<String, dynamic>> lines,
+    bool autoPost = true,
+  }) async {
+    return await _odooService.createCustomerInvoice(
+      partnerId: partnerId,
+      lines: lines,
+      autoPost: autoPost,
+    );
+  }
 }

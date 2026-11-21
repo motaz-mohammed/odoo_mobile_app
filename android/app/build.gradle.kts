@@ -40,7 +40,7 @@ flavorDimensions += "default"
             resValue(
                 type = "string",
                 name = "app_name",
-                value = "Odoo Sales Quotation Production"
+                value = "Odoo 17 Mobile Manager Production"
             )
         }
         create("development") {
@@ -49,7 +49,7 @@ flavorDimensions += "default"
             resValue(
                 type = "string",
                 name = "app_name",
-                value = "Odoo Sales Quotation Development"
+                value = "Odoo 17 Mobile Manager Development"
             )
         }
     }

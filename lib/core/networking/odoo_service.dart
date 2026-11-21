@@ -40,6 +40,7 @@ class OdooService {
   static const String customerInvoices = '/api/v3/account/invoices';
   static const String registerInvoicePayment = '/api/v3/account/invoice/pay';
   static const String customerInvoiceDetails = '/api/v3/account/invoice/details';
+  static const String createCustomerInvoiceEndpoint = '/api/v3/account/invoice/create';
 
   Future<String?> _getSavedSessionId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -296,5 +297,21 @@ class OdooService {
       throw Exception(result?['message'] ?? "Failed to load invoice details.");
     }
     return CustomerInvoiceDetail.fromJson(Map<String, dynamic>.from(result as Map));
+  }
+
+  Future<Map<String, dynamic>> createCustomerInvoice({
+    required int partnerId,
+    required List<Map<String, dynamic>> lines,
+    bool autoPost = true,
+  }) async {
+    final result = await postRPC(createCustomerInvoiceEndpoint, {
+      'partner_id': partnerId,
+      'lines': lines,
+      'auto_post': autoPost,
+    });
+    if (result == null || result['status'] != 'success') {
+      throw Exception(result?['message'] ?? "Failed to create customer invoice.");
+    }
+    return Map<String, dynamic>.from(result as Map);
   }
 }

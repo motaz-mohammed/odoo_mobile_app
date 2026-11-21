@@ -27,6 +27,9 @@ class Routes {
   //Customer Invoices
   static const String customerInvoicesScreen = '/customerInvoicesScreen';
 
-  //Customer Invoices
+  //Customer Invoices Details
   static const String customerInvoiceDetailsScreen = '/customerInvoiceDetailsScreen';
+
+  //Customer Invoices New
+  static const String customerInvoiceNewScreen = '/customerInvoiceNewScreen';
 }

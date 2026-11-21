@@ -5,6 +5,7 @@ import 'package:odoo_mobile_app/core/repository/odoo_repository.dart';
 import 'package:odoo_mobile_app/core/routing/routes.dart';
 import 'package:odoo_mobile_app/features/about/ui/about_developer_screen.dart';
 import 'package:odoo_mobile_app/features/accounting/ui/customer_invoice_details_screen.dart';
+import 'package:odoo_mobile_app/features/accounting/ui/customer_invoice_new_screen.dart';
 import 'package:odoo_mobile_app/features/accounting/ui/customer_invoices_screen.dart';
 import 'package:odoo_mobile_app/features/home/ui/home_screen.dart';
 import 'package:odoo_mobile_app/features/login/logic/cubits/login_cubit.dart';
@@ -163,6 +164,14 @@ class AppRouter {
           builder: (_) => RepositoryProvider.value(
             value: _odooRepository,
             child: CustomerInvoiceDetailsScreen(invoiceId: invoiceId),
+          ),
+        );
+
+      case Routes.customerInvoiceNewScreen:
+        return MaterialPageRoute(
+          builder: (_) => RepositoryProvider.value(
+            value: _odooRepository,
+            child: const CustomerInvoiceNewScreen(),
           ),
         );
 
